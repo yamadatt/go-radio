@@ -1,8 +1,6 @@
 package radiko
 
 import (
-	"os"
-	"path/filepath"
 	"testing"
 	"time"
 )
