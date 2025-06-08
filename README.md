@@ -29,6 +29,20 @@ cd go-radio
 go mod tidy
 ```
 
+## ファイル構成
+
+```
+go-radio/
+├── README.md              # このドキュメント
+├── go.mod                 # Go モジュール定義
+├── main.go                # エントリポイント
+└── internal/
+    └── radiko/
+        ├── client.go      # Radiko API クライアント
+        ├── config.go      # 設定関連
+        └── utils.go       # 補助関数
+```
+
 ## 使用方法
 
 ### 基本的な使用方法
