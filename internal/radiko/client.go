@@ -7,8 +7,6 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"os/exec"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -386,110 +384,6 @@ func (c *Client) getTimeFreeURL(stationID string, startTime, endTime time.Time) 
 	fmt.Printf("直接URLが見つからないため、プレイリストURLを使用: %s\n", streamInfoURL)
 	fmt.Printf("=== ストリーミングURL取得デバッグ完了 ===\n\n")
 	return streamInfoURL, nil
-}
-
-// findFFmpegPath はffmpegのパスを検出
-func (c *Client) findFFmpegPath() (string, error) {
-	// 試行するパスの優先順位
-	ffmpegPaths := []string{
-		"ffmpeg",                                // PATH内での検索
-		"/usr/bin/ffmpeg",                       // 標準的なLinuxパス
-		"/usr/local/bin/ffmpeg",                 // カスタムインストールパス
-		"/opt/homebrew/bin/ffmpeg",              // macOS Homebrew (Apple Silicon)
-		"/usr/local/Cellar/ffmpeg/*/bin/ffmpeg", // macOS Homebrew (Intel)
-	}
-
-	// まず、PATH内での検索を試行
-	if path, err := exec.LookPath("ffmpeg"); err == nil {
-		c.logger.Debug("ffmpeg found in PATH: %s", path)
-		return path, nil
-	}
-
-	// 各パスを順番にチェック
-	for _, path := range ffmpegPaths[1:] { // PATHは既にチェック済みなのでスキップ
-		if _, err := os.Stat(path); err == nil {
-			c.logger.Debug("ffmpeg found at: %s", path)
-			return path, nil
-		}
-	}
-
-	// 環境変数から取得を試行
-	if ffmpegEnv := os.Getenv("FFMPEG_PATH"); ffmpegEnv != "" {
-		if _, err := os.Stat(ffmpegEnv); err == nil {
-			c.logger.Debug("ffmpeg found via FFMPEG_PATH: %s", ffmpegEnv)
-			return ffmpegEnv, nil
-		}
-	}
-
-	return "", fmt.Errorf("ffmpegが見つかりません。以下のいずれかの方法でインストールしてください:\n" +
-		"- AWS Lambda: Dockerfileでインストール済み\n" +
-		"- macOS: brew install ffmpeg\n" +
-		"- Linux: apt-get install ffmpeg または yum install ffmpeg")
-}
-
-// downloadWithFFmpeg はffmpegを使用して音声をダウンロード
-func (c *Client) downloadWithFFmpeg(streamURL, outputFile string, duration int) error {
-	// ffmpegのパスを検出
-	ffmpegPath, err := c.findFFmpegPath()
-	if err != nil {
-		return fmt.Errorf("ffmpegが見つかりません: %w", err)
-	}
-
-	c.logger.Debug("使用するffmpeg: %s", ffmpegPath)
-
-	// 出力ディレクトリが存在するか確認
-	outputDir := filepath.Dir(outputFile)
-	if outputDir != "." {
-		if err := os.MkdirAll(outputDir, 0755); err != nil {
-			return fmt.Errorf("出力ディレクトリ作成エラー: %w", err)
-		}
-	}
-
-	// ffmpegコマンドを実行（HLS/m3u8対応）
-	args := []string{
-		"-i", streamURL,
-		"-t", fmt.Sprintf("%d", duration*60), // 秒に変換
-		"-c:a", "aac", // AACコーデックを明示的に指定
-		"-b:a", "128k", // ビットレート設定
-		"-f", "adts", // AAC形式
-		"-y",                   // 既存ファイルを上書き
-		"-loglevel", "warning", // ログレベルを制限
-		outputFile,
-	}
-
-	// radikoのストリーミング用の追加ヘッダー
-	if strings.Contains(streamURL, "radiko.jp") {
-		headerArgs := []string{
-			"-headers", "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
-		}
-		// ヘッダーを最初に追加
-		args = append(headerArgs, args...)
-	}
-
-	c.logger.Debug("ffmpegコマンド: %s %s", ffmpegPath, strings.Join(args, " "))
-	cmd := exec.Command(ffmpegPath, args...)
-
-	// プログレス表示のため、stderrを取得
-	var stderr bytes.Buffer
-	cmd.Stderr = &stderr
-
-	c.logger.Info("ffmpegでダウンロード中（%d分間）...", duration)
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("ffmpeg実行エラー: %w\nstderr: %s", err, stderr.String())
-	}
-
-	// ファイルサイズをチェック
-	fileInfo, err := os.Stat(outputFile)
-	if err != nil {
-		return fmt.Errorf("出力ファイル確認エラー: %w", err)
-	}
-
-	if fileInfo.Size() == 0 {
-		return fmt.Errorf("ダウンロードされたファイルが空です")
-	}
-
-	c.logger.Info("ダウンロード完了: %s (%.2f MB)", outputFile, float64(fileInfo.Size())/(1024*1024))
-	return nil
 }
 
 // downloadWithGo はffmpegを使用せずGoだけで音声をダウンロード

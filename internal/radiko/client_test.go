@@ -34,25 +34,6 @@ func TestGeneratePartialKey(t *testing.T) {
 	}
 }
 
-func TestFindFFmpegPathViaPATH(t *testing.T) {
-	dir := t.TempDir()
-	ff := filepath.Join(dir, "ffmpeg")
-	if err := os.WriteFile(ff, []byte(""), 0755); err != nil {
-		t.Fatalf("create file: %v", err)
-	}
-	oldPath := os.Getenv("PATH")
-	t.Setenv("PATH", dir)
-	c := &Client{logger: NewLogger(false)}
-	path, err := c.findFFmpegPath()
-	t.Setenv("PATH", oldPath)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if path != ff {
-		t.Errorf("expected %s, got %s", ff, path)
-	}
-}
-
 func TestFetchSegments(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {

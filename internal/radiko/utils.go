@@ -3,7 +3,6 @@ package radiko
 import (
 	"fmt"
 	"log"
-	"os"
 	"time"
 )
 
@@ -42,27 +41,18 @@ func (l *Logger) Fatal(format string, args ...interface{}) {
 // ValidateDateTime は日時の妥当性をチェック
 func ValidateDateTime(startTime time.Time) error {
 	now := time.Now()
-	
+
 	// 過去1週間以内かチェック
 	weekAgo := now.AddDate(0, 0, -7)
 	if startTime.Before(weekAgo) {
 		return fmt.Errorf("開始時間が古すぎます。タイムフリーは過去1週間分のみ利用可能です")
 	}
-	
+
 	// 未来の時間でないかチェック
 	if startTime.After(now) {
 		return fmt.Errorf("未来の時間は指定できません")
 	}
-	
-	return nil
-}
 
-// CheckFFmpeg はffmpegの存在をチェック
-func CheckFFmpeg(ffmpegPath string) error {
-	_, err := os.Stat(ffmpegPath)
-	if err != nil {
-		return fmt.Errorf("ffmpegが見つかりません（パス: %s）。インストールしてください", ffmpegPath)
-	}
 	return nil
 }
 
