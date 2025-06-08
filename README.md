@@ -46,6 +46,16 @@ go-radio/
         └── utils.go       # 補助関数
 ```
 
+## 設定ファイル
+
+`-config` オプションを実行すると `~/.go-radio/config.json` にデフォルト設定を生成できます。
+
+```bash
+go run main.go -config
+```
+
+設定ファイルでは出力ディレクトリやデフォルト録音時間、局IDのエイリアスなどを指定できます。
+
 ## 使用方法
 
 ### 基本的な使用方法
@@ -61,6 +71,8 @@ go run main.go -station=TBS -start="2024-06-07 20:00" -duration=60 -output=progr
 - `-duration`: 録音時間（分、デフォルト: 60分）
 - `-output`: 出力ファイル名（省略時は自動生成）
 - `-list`: 利用可能な局の一覧を表示
+- `-config`: デフォルト設定ファイルを生成
+- `-verbose`: 詳細ログを表示
 
 ### 利用可能なラジオ局の確認
 
@@ -135,6 +147,13 @@ go build -o go-radio main.go
   "output": "program.aac"
 }
 ```
+
+### 環境変数
+
+- `VERBOSE` - `true` を指定すると詳細ログを出力します
+- `DEFAULT_DURATION` - 録音時間のデフォルト値を上書きします
+- `DEFAULT_OUTPUT_DIR` - 相対パス指定時に付与する出力ディレクトリ
+- `UPLOAD_BUCKET` - 録音後にファイルをアップロードする S3 バケット名
 
 `output` に相対パスを指定した場合、Lambda 実行環境では `DEFAULT_OUTPUT_DIR`
 （デフォルト `/tmp/radiko`）が自動的に付与されます。書き込みエラーが発生する
