@@ -1,0 +1,14 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Go Radio Lambda
+
+Resources:
+  RadioFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image
+      Timeout: 900
+    Metadata:
+      Dockerfile: Dockerfile
+      DockerContext: .
+      DockerTag: go-radio:latest

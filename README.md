@@ -124,6 +124,25 @@ go build -o go-radio main.go
 ./go-radio -station=TBS -start="2024-06-07 20:00" -duration=60
 ```
 
+## AWS Lambda デプロイ (SAM + Docker)
+
+このリポジトリには `Dockerfile` と `template.yaml` が含まれており、SAM CLI を用いたコンテナベースの Lambda デプロイが可能です。
+
+1. SAM CLI をインストールします。
+2. `sam build` を実行してイメージをビルドします。
+3. `sam deploy --guided` を実行し、デプロイ情報を入力します。
+
+イベントの例:
+```json
+{
+  "station": "TBS",
+  "start": "2024-06-07 20:00",
+  "duration": 60,
+  "output": "program.aac"
+}
+```
+
+
 ## トラブルシューティング
 
 ### ffmpegが見つからない場合
