@@ -29,6 +29,18 @@ cd go-radio
 go mod tidy
 ```
 
+## 認証フロー
+
+1. `https://radiko.jp/v2/api/auth1` にアクセスし、レスポンスヘッダーから
+   `X-Radiko-Authtoken` と `X-Radiko-KeyLength` / `X-Radiko-KeyOffset` を取得します。
+2. ラジコ公式の JavaScript に埋め込まれている共通鍵を、取得したオフセットと長さで
+   切り出して Base64 エンコードしたものを `X-Radiko-Partialkey` として生成します。
+3. `https://radiko.jp/v2/api/auth2` に `X-Radiko-Authtoken` と `X-Radiko-Partialkey`
+   をヘッダーに付与してリクエストすると、トークンが有効化され、レスポンス本文に
+   エリアIDなどが返ります。
+4. 以降はストリームやタイムフリーの M3U8 を取得する際に `X-Radiko-Authtoken` を
+   ヘッダーに付けてアクセスします。
+
 ## ファイル構成
 
 ```
@@ -125,7 +137,8 @@ ffmpegがインストールされていません。brew install ffmpegでイン�
 ### 認証エラーが発生する場合
 - ネットワーク接続を確認してください
 - radikoのサービスが正常に動作しているか確認してください
-- 簡素化された認証を使用していますが、APIアクセス制限がある場合があります
+- Auth1/Auth2 を用いた公式の認証フローを実装しています。X-Radiko-Authtoken
+  が無効な場合は、再度 `go run` を実行して認証をやり直してください。
 
 ### 番組が見つからない場合
 - 指定した時間に番組が放送されていたか確認してください
