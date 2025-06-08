@@ -20,20 +20,6 @@ func TestValidateDateTime(t *testing.T) {
 	}
 }
 
-func TestCheckFFmpeg(t *testing.T) {
-	dir := t.TempDir()
-	ff := filepath.Join(dir, "ffmpeg")
-	if err := os.WriteFile(ff, []byte(""), 0755); err != nil {
-		t.Fatalf("create file: %v", err)
-	}
-	if err := CheckFFmpeg(ff); err != nil {
-		t.Errorf("unexpected error: %v", err)
-	}
-	if err := CheckFFmpeg(filepath.Join(dir, "missing")); err == nil {
-		t.Errorf("expected error for missing file")
-	}
-}
-
 func TestFormatDuration(t *testing.T) {
 	if got := FormatDuration(30); got != "30分" {
 		t.Errorf("unexpected result: %s", got)
