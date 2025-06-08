@@ -18,6 +18,17 @@ Resources:
       Policies:
         - S3WritePolicy:
             BucketName: "radio-transcribe"
+      Events:
+        RadioSchedule:
+          Type: Schedule
+          Properties:
+            Schedule: cron(10 22 ? * MON-THU *)
+            ScheduleExpressionTimezone: Asia/Tokyo
+            Input:
+              station: TBS
+              start: ""
+              duration: 120
+              output: yyyymmdd_hhmm.aac
     Metadata:
       Dockerfile: Dockerfile
       DockerContext: .

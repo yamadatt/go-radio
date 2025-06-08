@@ -84,8 +84,8 @@ func Handler(ctx context.Context, e Event) (string, error) {
 		}
 	}
 
-	if e.Station == "" || e.Start == "" {
-		return "", fmt.Errorf("station and start are required")
+	if e.Station == "" {
+		return "", fmt.Errorf("station is required")
 	}
 
 	stationID := e.Station
@@ -98,9 +98,20 @@ func Handler(ctx context.Context, e Event) (string, error) {
 		duration = config.DefaultDuration
 	}
 
-	startTime, err := time.Parse("2006-01-02 15:04", e.Start)
-	if err != nil {
-		return "", fmt.Errorf("時間の形式が正しくありません: %w", err)
+	var startTime time.Time
+	if e.Start == "" {
+		jst, err := time.LoadLocation("Asia/Tokyo")
+		if err != nil {
+			jst = time.FixedZone("JST", 9*60*60)
+		}
+		now := time.Now().In(jst)
+		startTime = time.Date(now.Year(), now.Month(), now.Day(), 20, 0, 0, 0, jst)
+	} else {
+		var err error
+		startTime, err = time.Parse("2006-01-02 15:04", e.Start)
+		if err != nil {
+			return "", fmt.Errorf("時間の形式が正しくありません: %w", err)
+		}
 	}
 
 	if err := radiko.ValidateDateTime(startTime); err != nil {
@@ -110,6 +121,8 @@ func Handler(ctx context.Context, e Event) (string, error) {
 	outputFile := e.Output
 	if outputFile == "" {
 		outputFile = fmt.Sprintf("%s_%s.aac", stationID, startTime.Format("20060102_1504"))
+	} else if outputFile == "yyyymmdd_hhmm.aac" {
+		outputFile = fmt.Sprintf("%s.aac", startTime.Format("20060102_1504"))
 	}
 	if !filepath.IsAbs(outputFile) && config.DefaultOutputDir != "" {
 		outputFile = filepath.Join(config.DefaultOutputDir, outputFile)
