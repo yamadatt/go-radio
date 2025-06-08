@@ -1,6 +1,6 @@
 # Go-Radio - Radikoタイムフリー録音ツール
 
-Golangで作成されたradikoのタイムフリー番組を音声ファイル（AAC形式）として保存するツールです。
+Golangで作成されたradikoのタイムフリー番組を音声ファイル（AAC形式）として保存するツールです。CLIアプリケーションとしてもAWS Lambda 関数としても利用できます。
 
 ## 機能
 - radikoのタイムフリー番組を録音
@@ -10,7 +10,7 @@ Golangで作成されたradikoのタイムフリー番組を音声ファイル�
 
 ## 必要な環境
 
- - Go 1.19以上
+ - Go 1.24以上
 
 ## インストール
 
@@ -38,7 +38,11 @@ go mod tidy
 go-radio/
 ├── README.md              # このドキュメント
 ├── go.mod                 # Go モジュール定義
-├── main.go                # エントリポイント
+├── main.go                # CLIエントリポイント
+├── lambda/
+│   └── handler.go         # AWS Lambda ハンドラー
+├── template.yaml          # SAM テンプレート
+├── Dockerfile             # Lambda用 Dockerfile
 └── internal/
     └── radiko/
         ├── client.go      # Radiko API クライアント
@@ -189,6 +193,8 @@ go build -o go-radio main.go
   "duration": 60,
   "output": "program.aac"
 }
+
+`test-lambda.json` として同じ内容のサンプルイベントをリポジトリに含めています。
 
 AWS CLI / SDK での実行
 
