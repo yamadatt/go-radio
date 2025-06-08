@@ -136,6 +136,10 @@ go build -o go-radio main.go
 }
 ```
 
+`output` に相対パスを指定した場合、Lambda 実行環境では `DEFAULT_OUTPUT_DIR`
+（デフォルト `/tmp/radiko`）が自動的に付与されます。書き込みエラーが発生する
+場合は `/tmp` 以下のディレクトリを指定してください。
+
 
 ## トラブルシューティング
 
@@ -148,6 +152,9 @@ go build -o go-radio main.go
 ### 番組が見つからない場合
 - 指定した時間に番組が放送されていたか確認してください
 - タイムフリーの利用可能期間（過去1週間）内かどうか確認してください
+- `録音に失敗: open *.aac: read-only file system` というエラーが出る場合は、
+  `/tmp` 以下に書き込むよう `output` を設定するか、`DEFAULT_OUTPUT_DIR`
+  を `/tmp` 以下に指定してください
 
 ## ライセンス
 
