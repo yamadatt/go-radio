@@ -56,7 +56,8 @@ func (c *Client) Auth() error {
 	c.logger.Debug("radiko認証を開始")
 	
 	// Step 1: auth1 - 認証トークンを取得
-	auth1URL := "https://radiko.jp/v2/api/auth1_fms"
+	// NOTE: Flash向けのauth1_fmsは廃止されたため、最新のauth1エンドポイントを使用する
+	auth1URL := "https://radiko.jp/v2/api/auth1"
 	req, err := http.NewRequest("POST", auth1URL, strings.NewReader(""))
 	if err != nil {
 		return fmt.Errorf("auth1リクエスト作成エラー: %w", err)
