@@ -14,6 +14,9 @@ Resources:
           DEFAULT_OUTPUT_DIR: /tmp/radiko
           FFMPEG_PATH: /usr/local/bin/ffmpeg
           UPLOAD_BUCKET: radio-transcribe
+      Policies:
+      - S3WritePolicy:
+          BucketName: radio-transcribe
       ImageUri: radiofunction:go-radio-latest
     Metadata:
       DockerContext: /home/yamadatt/git/go-radio

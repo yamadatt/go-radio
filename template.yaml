@@ -15,6 +15,9 @@ Resources:
           DEFAULT_OUTPUT_DIR: "/tmp/radiko"
           FFMPEG_PATH: "/usr/local/bin/ffmpeg"
           UPLOAD_BUCKET: "radio-transcribe"
+      Policies:
+        - S3WritePolicy:
+            BucketName: "radio-transcribe"
     Metadata:
       Dockerfile: Dockerfile
       DockerContext: .
