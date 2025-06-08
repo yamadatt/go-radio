@@ -10,15 +10,7 @@ Golangで作成されたradikoのタイムフリー番組を音声ファイル�
 
 ## 必要な環境
 
-- Go 1.19以上
-- ffmpeg（音声ファイルのダウンロードに使用）
-
-### ffmpegのインストール
-
-macOSの場合：
-```bash
-brew install ffmpeg
-```
+ - Go 1.19以上
 
 ## インストール
 
@@ -144,12 +136,6 @@ go build -o go-radio main.go
 
 
 ## トラブルシューティング
-
-### ffmpegが見つからない場合
-```
-ffmpegがインストールされていません。brew install ffmpegでインストールしてください
-```
-→ ffmpegをインストールしてください
 
 ### 認証エラーが発生する場合
 - ネットワーク接続を確認してください

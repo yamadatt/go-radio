@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"os/exec"
@@ -255,8 +256,8 @@ func (c *Client) RecordTimeFree(stationID string, startTime time.Time, duration 
 	c.logger.Debug("ストリーミングURL: %s", streamURL)
 	c.logger.Info("ダウンロード開始...")
 
-	// ffmpegを使用して音声ファイルをダウンロード
-	return c.downloadWithFFmpeg(streamURL, outputFile, duration)
+	// Goのみを用いて音声ファイルをダウンロード
+	return c.downloadWithGo(streamURL, outputFile)
 }
 
 // getTimeFreeURL はタイムフリー再生用のプレイリストURLを取得
@@ -489,4 +490,105 @@ func (c *Client) downloadWithFFmpeg(streamURL, outputFile string, duration int) 
 
 	c.logger.Info("ダウンロード完了: %s (%.2f MB)", outputFile, float64(fileInfo.Size())/(1024*1024))
 	return nil
+}
+
+// downloadWithGo はffmpegを使用せずGoだけで音声をダウンロード
+func (c *Client) downloadWithGo(streamURL, outputFile string) error {
+	segments, err := c.fetchSegments(streamURL)
+	if err != nil {
+		return err
+	}
+	if len(segments) == 0 {
+		return fmt.Errorf("プレイリストからセグメントを取得できませんでした")
+	}
+
+	out, err := os.Create(outputFile)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
+	for i, segURL := range segments {
+		req, err := http.NewRequest("GET", segURL, nil)
+		if err != nil {
+			return err
+		}
+		req.Header.Set("User-Agent", "Mozilla/5.0")
+		if c.authToken != "" {
+			req.Header.Set("X-Radiko-AuthToken", c.authToken)
+		}
+
+		resp, err := c.httpClient.Do(req)
+		if err != nil {
+			return err
+		}
+		if resp.StatusCode != http.StatusOK {
+			resp.Body.Close()
+			return fmt.Errorf("セグメントダウンロード失敗: %s", resp.Status)
+		}
+		if _, err := io.Copy(out, resp.Body); err != nil {
+			resp.Body.Close()
+			return err
+		}
+		resp.Body.Close()
+		if (i+1)%10 == 0 {
+			c.logger.Info("%d/%dセグメント完了", i+1, len(segments))
+		}
+	}
+
+	fi, err := out.Stat()
+	if err == nil {
+		c.logger.Info("ダウンロード完了: %s (%.2f MB)", outputFile, float64(fi.Size())/(1024*1024))
+		return nil
+	}
+	return err
+}
+
+// fetchSegments はm3u8プレイリストを再帰的に解析し、セグメントURLを取得
+func (c *Client) fetchSegments(playlistURL string) ([]string, error) {
+	req, err := http.NewRequest("GET", playlistURL, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("User-Agent", "Mozilla/5.0")
+	if c.authToken != "" {
+		req.Header.Set("X-Radiko-AuthToken", c.authToken)
+	}
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("プレイリスト取得失敗: %s", resp.Status)
+	}
+
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	lines := strings.Split(string(data), "\n")
+	base := playlistURL[:strings.LastIndex(playlistURL, "/")+1]
+	var segments []string
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		u := line
+		if !strings.HasPrefix(u, "http") {
+			u = base + u
+		}
+		if strings.Contains(u, ".m3u8") {
+			sub, err := c.fetchSegments(u)
+			if err != nil {
+				return nil, err
+			}
+			segments = append(segments, sub...)
+		} else {
+			segments = append(segments, u)
+		}
+	}
+	return segments, nil
 }
