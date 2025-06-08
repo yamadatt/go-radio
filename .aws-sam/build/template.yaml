@@ -17,6 +17,17 @@ Resources:
       Policies:
       - S3WritePolicy:
           BucketName: radio-transcribe
+      Events:
+        ScheduleV2Event:
+          Type: ScheduleV2
+          Properties:
+            ScheduleExpression: cron(10 22 ? * MON-THU *)
+            ScheduleExpressionTimezone: Asia/Tokyo
+            Input: "{\n  \"station\": \"TBS\",\n  \"start\": \"\",\n  \"duration\"\
+              : 120,\n  \"output\": \"yyyymmdd_hhmm.aac\"\n}\n"
+            State: ENABLED
+            Name: radio-schedule-event
+            Description: radio-schedule-event
       ImageUri: radiofunction:go-radio-latest
     Metadata:
       DockerContext: /home/yamadatt/git/go-radio
