@@ -87,16 +87,16 @@ func main() {
 	// 出力ファイル名の生成
 	outputFile := *output
 	if outputFile == "" {
-		outputFile = fmt.Sprintf("%s_%s.aac", 
-			*stationID, 
+		outputFile = fmt.Sprintf("%s_%s.aac",
+			*stationID,
 			startDateTime.Format("20060102_1504"))
-		
+
 		// 設定で指定された出力ディレクトリを使用
 		if config.DefaultOutputDir != "" {
 			outputFile = filepath.Join(config.DefaultOutputDir, outputFile)
 		}
 	}
-	
+
 	// .aac拡張子を確認
 	if !strings.HasSuffix(outputFile, ".aac") {
 		outputFile += ".aac"
