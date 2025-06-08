@@ -6,9 +6,9 @@ on:
   pull_request:
 
 jobs:
-  environment: aws
   build-and-deploy:
     runs-on: ubuntu-latest
+    environment: aws
     steps:
       - uses: actions/checkout@v4
 
