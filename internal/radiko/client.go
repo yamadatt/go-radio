@@ -63,17 +63,18 @@ func (c *Client) Auth() error {
 	auth1URL := "https://radiko.jp/v2/api/auth1"
 	fmt.Printf("auth1 URL: %s\n", auth1URL)
 
-	req, err := http.NewRequest("POST", auth1URL, nil)
+	req, err := http.NewRequest("GET", auth1URL, nil)
 	if err != nil {
 		return fmt.Errorf("auth1リクエスト作成エラー: %w", err)
 	}
 
 	// 必要なヘッダーを設定
-	req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36")
+	req.Header.Set("User-Agent", "Mozilla/5.0")
 	req.Header.Set("Accept", "*/*")
-	req.Header.Set("X-Radiko-App", "pc_ts")
-	req.Header.Set("X-Radiko-App-Version", "4.0.0")
-	req.Header.Set("X-Radiko-User", "test-stream")
+	req.Header.Set("Pragma", "no-cache")
+	req.Header.Set("X-Radiko-App", "pc_html5")
+	req.Header.Set("X-Radiko-App-Version", "0.0.1")
+	req.Header.Set("X-Radiko-User", "dummy_user")
 	req.Header.Set("X-Radiko-Device", "pc")
 
 	fmt.Printf("auth1リクエスト送信中...\n")
@@ -136,13 +137,14 @@ func (c *Client) Auth() error {
 	auth2URL := "https://radiko.jp/v2/api/auth2"
 	fmt.Printf("auth2 URL: %s\n", auth2URL)
 
-	req2, err := http.NewRequest("POST", auth2URL, nil)
+	req2, err := http.NewRequest("GET", auth2URL, nil)
 	if err != nil {
 		return fmt.Errorf("auth2リクエスト作成エラー: %w", err)
 	}
 
-	req2.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36")
+	req2.Header.Set("User-Agent", "Mozilla/5.0")
 	req2.Header.Set("Accept", "*/*")
+	req2.Header.Set("Pragma", "no-cache")
 	req2.Header.Set("X-Radiko-AuthToken", authToken)
 	req2.Header.Set("X-Radiko-Partialkey", partialKey)
 
