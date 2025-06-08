@@ -391,19 +391,19 @@ func (c *Client) getTimeFreeURL(stationID string, startTime, endTime time.Time) 
 func (c *Client) findFFmpegPath() (string, error) {
 	// 試行するパスの優先順位
 	ffmpegPaths := []string{
-		"ffmpeg",           // PATH内での検索
-		"/usr/bin/ffmpeg",  // 標準的なLinuxパス
-		"/usr/local/bin/ffmpeg", // カスタムインストールパス
-		"/opt/homebrew/bin/ffmpeg", // macOS Homebrew (Apple Silicon)
+		"ffmpeg",                                // PATH内での検索
+		"/usr/bin/ffmpeg",                       // 標準的なLinuxパス
+		"/usr/local/bin/ffmpeg",                 // カスタムインストールパス
+		"/opt/homebrew/bin/ffmpeg",              // macOS Homebrew (Apple Silicon)
 		"/usr/local/Cellar/ffmpeg/*/bin/ffmpeg", // macOS Homebrew (Intel)
 	}
-	
+
 	// まず、PATH内での検索を試行
 	if path, err := exec.LookPath("ffmpeg"); err == nil {
 		c.logger.Debug("ffmpeg found in PATH: %s", path)
 		return path, nil
 	}
-	
+
 	// 各パスを順番にチェック
 	for _, path := range ffmpegPaths[1:] { // PATHは既にチェック済みなのでスキップ
 		if _, err := os.Stat(path); err == nil {
@@ -411,7 +411,7 @@ func (c *Client) findFFmpegPath() (string, error) {
 			return path, nil
 		}
 	}
-	
+
 	// 環境変数から取得を試行
 	if ffmpegEnv := os.Getenv("FFMPEG_PATH"); ffmpegEnv != "" {
 		if _, err := os.Stat(ffmpegEnv); err == nil {
@@ -419,7 +419,7 @@ func (c *Client) findFFmpegPath() (string, error) {
 			return ffmpegEnv, nil
 		}
 	}
-	
+
 	return "", fmt.Errorf("ffmpegが見つかりません。以下のいずれかの方法でインストールしてください:\n" +
 		"- AWS Lambda: Dockerfileでインストール済み\n" +
 		"- macOS: brew install ffmpeg\n" +
@@ -433,7 +433,7 @@ func (c *Client) downloadWithFFmpeg(streamURL, outputFile string, duration int) 
 	if err != nil {
 		return fmt.Errorf("ffmpegが見つかりません: %w", err)
 	}
-	
+
 	c.logger.Debug("使用するffmpeg: %s", ffmpegPath)
 
 	// 出力ディレクトリが存在するか確認

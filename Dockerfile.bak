@@ -10,13 +10,19 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o main lambda/handler.go
 # Runtime stage
 FROM public.ecr.aws/lambda/provided:al2023
 
-# ffmpegをインストール
-RUN dnf update -y && \
-    dnf install -y epel-release && \
-    dnf config-manager --set-enabled crb && \
-    dnf install -y ffmpeg && \
-    dnf clean all && \
-    rm -rf /var/cache/dnf
+RUN yum -y update && \
+    yum -y install curl tar xz && \
+    yum clean all
+
+# ── 公式の静的ビルドをダウンロード（x86_64 版）──
+#   ※ arm64 でビルドする場合は URL を差し替えてください
+RUN curl -L -o /tmp/ffmpeg.tar.xz \
+        https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz && \
+    tar -C /opt -xJf /tmp/ffmpeg.tar.xz && \
+    mv /opt/ffmpeg-*-static /opt/ffmpeg && \
+    ln -s /opt/ffmpeg/ffmpeg  /usr/local/bin/ffmpeg  && \
+    ln -s /opt/ffmpeg/ffprobe /usr/local/bin/ffprobe && \
+    rm -f /tmp/ffmpeg.tar.xz
 
 # Goアプリケーションをコピー
 COPY --from=builder /src/main ${LAMBDA_TASK_ROOT}/bootstrap

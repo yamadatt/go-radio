@@ -164,3 +164,21 @@ ffmpegがインストールされていません。brew install ffmpegでイン�
 ## ライセンス
 
 このソフトウェアは個人的な学習目的で作成されています。radikoの利用規約を遵守してご利用ください。
+
+## テスト
+
+基本的なJSONイベント
+
+{
+  "station": "TBS",
+  "start": "2025-06-08 20:00",
+  "duration": 60,
+  "output": "program.aac"
+}
+
+AWS CLI / SDK での実行
+
+aws lambda invoke \
+  --function-name RadioFunction \
+  --payload '{"station":"TBS","start":"2025-06-08 20:00","duration":60}' \
+  response.json
