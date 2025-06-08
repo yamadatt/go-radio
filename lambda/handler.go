@@ -110,9 +110,9 @@ func Handler(ctx context.Context, e Event) (string, error) {
 	outputFile := e.Output
 	if outputFile == "" {
 		outputFile = fmt.Sprintf("%s_%s.aac", stationID, startTime.Format("20060102_1504"))
-		if config.DefaultOutputDir != "" {
-			outputFile = filepath.Join(config.DefaultOutputDir, outputFile)
-		}
+	}
+	if !filepath.IsAbs(outputFile) && config.DefaultOutputDir != "" {
+		outputFile = filepath.Join(config.DefaultOutputDir, outputFile)
 	}
 	if !strings.HasSuffix(outputFile, ".aac") {
 		outputFile += ".aac"
