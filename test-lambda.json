@@ -1,0 +1,13 @@
+{
+  "station": "TBS",
+  "start": "2025-06-08 20:00",
+  "duration": 60,
+  "output": "test-program.aac",
+  "verbose": true,
+  "config": {
+    "default_output_dir": "/tmp/radiko-test",
+    "station_aliases": {
+      "test_station": "TBS"
+    }
+  }
+}

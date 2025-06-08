@@ -1,0 +1,8 @@
+version = 0.1
+[default.deploy.parameters]
+stack_name = "go-radio"
+resolve_s3 = true
+s3_prefix = "go-radio"
+region = "ap-northeast-1"
+capabilities = "CAPABILITY_IAM"
+image_repositories = ["RadioFunction=449671225256.dkr.ecr.ap-northeast-1.amazonaws.com/goradio29eaea0d/radiofunction0de9028brepo"]

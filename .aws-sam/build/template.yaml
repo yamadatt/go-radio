@@ -1,0 +1,21 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Go Radio Lambda
+Resources:
+  RadioFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image
+      Timeout: 900
+      Environment:
+        Variables:
+          VERBOSE: 'false'
+          DEFAULT_DURATION: '60'
+          DEFAULT_OUTPUT_DIR: /tmp/radiko
+          FFMPEG_PATH: /usr/bin/ffmpeg
+      ImageUri: radiofunction:go-radio-latest
+    Metadata:
+      DockerContext: /home/yamadatt/git/go-radio
+      DockerTag: go-radio-latest
+      Dockerfile: Dockerfile
+      SamResourceId: RadioFunction

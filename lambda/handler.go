@@ -5,6 +5,7 @@ import (
     "fmt"
     "os"
     "path/filepath"
+    "strconv"
     "strings"
     "time"
 
@@ -19,16 +20,62 @@ type Event struct {
     Duration int    `json:"duration"`
     Output   string `json:"output"`
     Verbose  bool   `json:"verbose"`
+    
+    // 追加の設定オプション
+    Config   *ConfigOverride `json:"config,omitempty"`
+}
+
+// ConfigOverride allows overriding default configuration
+type ConfigOverride struct {
+    DefaultOutputDir string            `json:"default_output_dir,omitempty"`
+    DefaultDuration  int               `json:"default_duration,omitempty"`
+    StationAliases   map[string]string `json:"station_aliases,omitempty"`
+    FFmpegPath       string            `json:"ffmpeg_path,omitempty"`
 }
 
 // Handler is the Lambda entry point
 func Handler(ctx context.Context, e Event) (string, error) {
-    logger := radiko.NewLogger(e.Verbose)
+    // 環境変数からverboseを取得（イベントで上書き可能）
+    verbose := e.Verbose
+    if os.Getenv("VERBOSE") == "true" {
+        verbose = true
+    }
+    
+    logger := radiko.NewLogger(verbose)
 
     config, err := radiko.LoadConfig("")
     if err != nil {
         logger.Error("設定読み込み警告: %v", err)
         config = radiko.DefaultConfig()
+    }
+    
+    // 環境変数からデフォルト値を取得
+    if defaultDuration := os.Getenv("DEFAULT_DURATION"); defaultDuration != "" {
+        if dur, err := strconv.Atoi(defaultDuration); err == nil {
+            config.DefaultDuration = dur
+        }
+    }
+    
+    if defaultOutputDir := os.Getenv("DEFAULT_OUTPUT_DIR"); defaultOutputDir != "" {
+        config.DefaultOutputDir = defaultOutputDir
+    }
+
+    // イベントから設定をオーバーライド
+    if e.Config != nil {
+        if e.Config.DefaultOutputDir != "" {
+            config.DefaultOutputDir = e.Config.DefaultOutputDir
+        }
+        if e.Config.DefaultDuration > 0 {
+            config.DefaultDuration = e.Config.DefaultDuration
+        }
+        if e.Config.FFmpegPath != "" {
+            config.FFmpegPath = e.Config.FFmpegPath
+        }
+        if e.Config.StationAliases != nil {
+            for k, v := range e.Config.StationAliases {
+                config.StationAliases[k] = v
+            }
+        }
     }
 
     if e.Station == "" || e.Start == "" {
