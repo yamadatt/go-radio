@@ -239,14 +239,14 @@ func min(a, b int) int {
 	return b
 }
 
-// RecordTimeFree はライブストリーム番組を録音（タイムフリーの代替）
+// RecordTimeFree はタイムフリー番組を録音する
 func (c *Client) RecordTimeFree(stationID string, startTime time.Time, duration int, outputFile string) error {
-	c.logger.Info("注意: タイムフリーではなくライブストリームを録音します")
+	endTime := startTime.Add(time.Duration(duration) * time.Minute)
 
-	c.logger.Debug("録音設定: 局=%s, 録音時間=%d分", stationID, duration)
+	c.logger.Debug("録音設定: 局=%s, 開始=%s, 終了=%s", stationID, startTime.Format(time.RFC3339), endTime.Format(time.RFC3339))
 
-	// ライブストリーミングURLを取得
-	streamURL, err := c.getTimeFreeURL(stationID, startTime, time.Time{})
+	// タイムフリー再生用URLを取得
+	streamURL, err := c.getTimeFreeURL(stationID, startTime, endTime)
 	if err != nil {
 		return fmt.Errorf("ストリーミングURL取得エラー: %w", err)
 	}
@@ -259,11 +259,17 @@ func (c *Client) RecordTimeFree(stationID string, startTime time.Time, duration 
 	return c.downloadWithFFmpeg(streamURL, outputFile, duration)
 }
 
-// getTimeFreeURL はライブストリーミングURLを取得
+// getTimeFreeURL はタイムフリー再生用のプレイリストURLを取得
 func (c *Client) getTimeFreeURL(stationID string, startTime, endTime time.Time) (string, error) {
 	c.logger.Debug("ストリーミングURL取得を開始: 局=%s", stationID)
 	fmt.Printf("=== ストリーミングURL取得デバッグ開始 ===\n")
 	fmt.Printf("局ID: %s\n", stationID)
+	if !startTime.IsZero() {
+		fmt.Printf("開始: %s\n", startTime.Format("2006-01-02 15:04:05"))
+	}
+	if !endTime.IsZero() {
+		fmt.Printf("終了: %s\n", endTime.Format("2006-01-02 15:04:05"))
+	}
 
 	// 認証が必要
 	if c.authToken == "" {
@@ -273,10 +279,14 @@ func (c *Client) getTimeFreeURL(stationID string, startTime, endTime time.Time) 
 
 	fmt.Printf("使用する認証トークン: %s... (長さ: %d)\n", c.authToken[:10], len(c.authToken))
 
-	// ライブストリーミング用のプレイリストURL取得
-	// radikoの正式なライブストリームエンドポイント
-	streamInfoURL := fmt.Sprintf("https://radiko.jp/v2/api/ts/playlist.m3u8?station_id=%s&l=15&lsid=%d&type=b",
-		stationID, time.Now().Unix())
+	// タイムフリー用のプレイリストURLを構築
+	streamInfoURL := fmt.Sprintf("https://radiko.jp/v2/api/ts/playlist.m3u8?station_id=%s", stationID)
+	if !startTime.IsZero() {
+		streamInfoURL += "&ft=" + startTime.Format("20060102150405")
+	}
+	if !endTime.IsZero() {
+		streamInfoURL += "&to=" + endTime.Format("20060102150405")
+	}
 
 	fmt.Printf("ストリーミング情報URL: %s\n", streamInfoURL)
 
