@@ -24,8 +24,8 @@ FROM public.ecr.aws/lambda/provided:al2023
 COPY --from=ffmpeg-builder /usr/local/bin/ffmpeg /usr/local/bin/ffmpeg
 
 # Goアプリケーションをコピー
-COPY --from=builder /src/main ${LAMBDA_TASK_ROOT}/bootstrap
-RUN chmod +x ${LAMBDA_TASK_ROOT}/bootstrap
+COPY --from=builder /src/main /var/runtime/bootstrap
+RUN chmod +x /var/runtime/bootstrap
 
 # ffmpegのパスを環境変数に設定
 ENV PATH="/usr/local/bin:${PATH}"
