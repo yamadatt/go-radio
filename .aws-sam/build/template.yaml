@@ -12,7 +12,7 @@ Resources:
           VERBOSE: 'false'
           DEFAULT_DURATION: '60'
           DEFAULT_OUTPUT_DIR: /tmp/radiko
-          FFMPEG_PATH: /usr/bin/ffmpeg
+          FFMPEG_PATH: /usr/local/bin/ffmpeg
       ImageUri: radiofunction:go-radio-latest
     Metadata:
       DockerContext: /home/yamadatt/git/go-radio
