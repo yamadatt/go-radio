@@ -11,6 +11,11 @@ import (
 
     "go-radio/internal/radiko"
     "github.com/aws/aws-lambda-go/lambda"
+
+    // S3 upload
+    "github.com/aws/aws-sdk-go-v2/config"
+    "github.com/aws/aws-sdk-go-v2/service/s3"
+    "github.com/aws/aws-sdk-go-v2/aws"
 )
 
 // Event defines input parameters for the Lambda function
@@ -129,7 +134,38 @@ func Handler(ctx context.Context, e Event) (string, error) {
         return "", fmt.Errorf("録音に失敗: %w", err)
     }
 
+    // Upload to S3 if bucket is specified
+    bucket := os.Getenv("UPLOAD_BUCKET")
+    if bucket != "" {
+        key := filepath.Base(outputFile)
+        if err := uploadFileToS3(ctx, bucket, key, outputFile); err != nil {
+            return "", fmt.Errorf("S3アップロード失敗: %w", err)
+        }
+    }
+
     return fmt.Sprintf("録音完了: %s", outputFile), nil
+}
+
+func uploadFileToS3(ctx context.Context, bucket, key, path string) error {
+    cfg, err := config.LoadDefaultConfig(ctx)
+    if err != nil {
+        return err
+    }
+    client := s3.NewFromConfig(cfg)
+
+    f, err := os.Open(path)
+    if err != nil {
+        return err
+    }
+    defer f.Close()
+
+    _, err = client.PutObject(ctx, &s3.PutObjectInput{
+        Bucket: aws.String(bucket),
+        Key:    aws.String(key),
+        Body:   f,
+        ContentType: aws.String("audio/aac"),
+    })
+    return err
 }
 
 func main() {

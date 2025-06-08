@@ -123,6 +123,8 @@ go build -o go-radio main.go
 1. SAM CLI をインストールします。
 2. `sam build` を実行してイメージをビルドします。
 3. `sam deploy --guided` を実行し、デプロイ情報を入力します。
+   `UPLOAD_BUCKET` 環境変数にアップロード先の S3 バケット名を指定してください。
+   例:`UPLOAD_BUCKET=radio-transcribe`
 
 イベントの例:
 ```json
