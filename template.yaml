@@ -11,4 +11,8 @@ Resources:
     Metadata:
       Dockerfile: Dockerfile
       DockerContext: .
-      DockerTag: go-radio:latest
+      # The DockerTag should be a single tag string. Using a value with a
+      # colon results in an invalid Docker reference when SAM prepends the
+      # function name. To keep the tag descriptive while valid, use a hyphen
+      # instead of a colon.
+      DockerTag: go-radio-latest
