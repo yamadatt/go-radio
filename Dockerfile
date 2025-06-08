@@ -29,20 +29,20 @@ RUN echo "=== Goビルド開始 ===" && \
 # Runtime stage
 FROM public.ecr.aws/lambda/provided:al2023
 
-# 静的ffmpegバイナリをダウンロード
-RUN dnf update -y && \
-    dnf install -y tar xz && \
-    dnf clean all
+# # 静的ffmpegバイナリをダウンロード
+# RUN dnf update -y && \
+#     dnf install -y tar xz && \
+#     dnf clean all
 
-# John Van Sickleの静的ビルドを使用（最も確実）
-RUN curl -L -o /tmp/ffmpeg.tar.xz \
-        https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz && \
-    tar -C /opt -xJf /tmp/ffmpeg.tar.xz && \
-    mv /opt/ffmpeg-*-static /opt/ffmpeg && \
-    ln -s /opt/ffmpeg/ffmpeg  /usr/local/bin/ffmpeg  && \
-    ln -s /opt/ffmpeg/ffprobe /usr/local/bin/ffprobe && \
-    rm -f /tmp/ffmpeg.tar.xz && \
-    chmod +x /usr/local/bin/ffmpeg /usr/local/bin/ffprobe
+# # John Van Sickleの静的ビルドを使用（最も確実）
+# RUN curl -L -o /tmp/ffmpeg.tar.xz \
+#         https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz && \
+#     tar -C /opt -xJf /tmp/ffmpeg.tar.xz && \
+#     mv /opt/ffmpeg-*-static /opt/ffmpeg && \
+#     ln -s /opt/ffmpeg/ffmpeg  /usr/local/bin/ffmpeg  && \
+#     ln -s /opt/ffmpeg/ffprobe /usr/local/bin/ffprobe && \
+#     rm -f /tmp/ffmpeg.tar.xz && \
+#     chmod +x /usr/local/bin/ffmpeg /usr/local/bin/ffprobe
 
 # Goアプリケーションをコピー
 COPY --from=builder /src/main ${LAMBDA_TASK_ROOT}/bootstrap
@@ -55,10 +55,10 @@ RUN chmod +x ${LAMBDA_TASK_ROOT}/bootstrap && \
 # コピーされたファイルを確認
 
 # ffmpegのパスを環境変数に設定
-ENV PATH="/usr/local/bin:${PATH}"
-ENV FFMPEG_PATH="/usr/local/bin/ffmpeg"
+# ENV PATH="/usr/local/bin:${PATH}"
+# ENV FFMPEG_PATH="/usr/local/bin/ffmpeg"
 
 # ffmpegのテスト
-RUN /usr/local/bin/ffmpeg -version
+# RUN /usr/local/bin/ffmpeg -version
 
 CMD ["bootstrap"]
