@@ -6,6 +6,7 @@ on:
   pull_request:
 
 jobs:
+  environment: aws
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
