@@ -56,11 +56,11 @@ func GetAvailableStations() map[string]string {
 // Auth はradikoの認証を行う（正式な認証フロー）
 func (c *Client) Auth() error {
 	c.logger.Debug("radiko認証を開始")
-	fmt.Printf("=== RADIKO認証デバッグ開始 ===\n")
+	c.logger.Debug("=== RADIKO認証デバッグ開始 ===")
 
 	// Step 1: auth1 - 認証トークンとキー情報を取得
 	auth1URL := "https://radiko.jp/v2/api/auth1"
-	fmt.Printf("auth1 URL: %s\n", auth1URL)
+	c.logger.Debug("auth1 URL: %s", auth1URL)
 
 	req, err := http.NewRequest("GET", auth1URL, nil)
 	if err != nil {
@@ -76,28 +76,28 @@ func (c *Client) Auth() error {
 	req.Header.Set("X-Radiko-User", "dummy_user")
 	req.Header.Set("X-Radiko-Device", "pc")
 
-	fmt.Printf("auth1リクエスト送信中...\n")
+	c.logger.Debug("auth1リクエスト送信中...")
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		fmt.Printf("auth1リクエストエラー: %v\n", err)
+		c.logger.Error("auth1リクエストエラー: %v", err)
 		return fmt.Errorf("auth1リクエストエラー: %w", err)
 	}
 	defer resp.Body.Close()
 
-	fmt.Printf("auth1レスポンス: HTTP %d\n", resp.StatusCode)
+	c.logger.Debug("auth1レスポンス: HTTP %d", resp.StatusCode)
 
 	// レスポンスヘッダーをデバッグ表示
-	fmt.Printf("auth1レスポンスヘッダー:\n")
+	c.logger.Debug("auth1レスポンスヘッダー:")
 	for key, values := range resp.Header {
 		for _, value := range values {
-			fmt.Printf("  %s: %s\n", key, value)
+			c.logger.Debug("  %s: %s", key, value)
 		}
 	}
 
 	if resp.StatusCode != 200 {
 		var buf bytes.Buffer
 		buf.ReadFrom(resp.Body)
-		fmt.Printf("auth1エラーレスポンス: %s\n", buf.String())
+		c.logger.Debug("auth1エラーレスポンス: %s", buf.String())
 		return fmt.Errorf("auth1認証失敗: HTTP %d", resp.StatusCode)
 	}
 
@@ -107,7 +107,7 @@ func (c *Client) Auth() error {
 		authToken = resp.Header.Get("x-radiko-authtoken")
 	}
 	if authToken == "" {
-		fmt.Printf("認証トークンが見つかりませんでした\n")
+		c.logger.Error("認証トークンが見つかりませんでした")
 		return fmt.Errorf("認証トークンが取得できませんでした")
 	}
 
@@ -121,8 +121,8 @@ func (c *Client) Auth() error {
 		keyOffset = resp.Header.Get("x-radiko-keyoffset")
 	}
 
-	fmt.Printf("認証トークン: %s... (長さ: %d)\n", authToken[:min(10, len(authToken))], len(authToken))
-	fmt.Printf("キー長: %s, キーオフセット: %s\n", keyLength, keyOffset)
+	c.logger.Debug("認証トークン: %s... (長さ: %d)", authToken[:min(10, len(authToken))], len(authToken))
+	c.logger.Debug("キー長: %s, キーオフセット: %s", keyLength, keyOffset)
 
 	// 部分鍵を生成
 	partialKey, err := c.generatePartialKey(keyLength, keyOffset)
@@ -130,11 +130,11 @@ func (c *Client) Auth() error {
 		return fmt.Errorf("部分鍵生成エラー: %w", err)
 	}
 
-	fmt.Printf("部分鍵生成完了: %s... (長さ: %d)\n", partialKey[:min(10, len(partialKey))], len(partialKey))
+	c.logger.Debug("部分鍵生成完了: %s... (長さ: %d)", partialKey[:min(10, len(partialKey))], len(partialKey))
 
 	// Step 2: auth2 - 認証の有効化
 	auth2URL := "https://radiko.jp/v2/api/auth2"
-	fmt.Printf("auth2 URL: %s\n", auth2URL)
+	c.logger.Debug("auth2 URL: %s", auth2URL)
 
 	req2, err := http.NewRequest("GET", auth2URL, nil)
 	if err != nil {
@@ -147,24 +147,24 @@ func (c *Client) Auth() error {
 	req2.Header.Set("X-Radiko-AuthToken", authToken)
 	req2.Header.Set("X-Radiko-Partialkey", partialKey)
 
-	fmt.Printf("auth2リクエスト送信中...\n")
-	fmt.Printf("使用する認証トークン: %s...\n", authToken[:min(10, len(authToken))])
-	fmt.Printf("使用する部分鍵: %s...\n", partialKey[:min(10, len(partialKey))])
+	c.logger.Debug("auth2リクエスト送信中...")
+	c.logger.Debug("使用する認証トークン: %s...", authToken[:min(10, len(authToken))])
+	c.logger.Debug("使用する部分鍵: %s...", partialKey[:min(10, len(partialKey))])
 
 	resp2, err := c.httpClient.Do(req2)
 	if err != nil {
-		fmt.Printf("auth2リクエストエラー: %v\n", err)
+		c.logger.Error("auth2リクエストエラー: %v", err)
 		return fmt.Errorf("auth2リクエストエラー: %w", err)
 	}
 	defer resp2.Body.Close()
 
-	fmt.Printf("auth2レスポンス: HTTP %d\n", resp2.StatusCode)
+	c.logger.Debug("auth2レスポンス: HTTP %d", resp2.StatusCode)
 
 	// auth2レスポンスヘッダーをデバッグ表示
-	fmt.Printf("auth2レスポンスヘッダー:\n")
+	c.logger.Debug("auth2レスポンスヘッダー:")
 	for key, values := range resp2.Header {
 		for _, value := range values {
-			fmt.Printf("  %s: %s\n", key, value)
+			c.logger.Debug("  %s: %s", key, value)
 		}
 	}
 
@@ -172,7 +172,7 @@ func (c *Client) Auth() error {
 	var buf2 bytes.Buffer
 	buf2.ReadFrom(resp2.Body)
 	auth2Response := buf2.String()
-	fmt.Printf("auth2レスポンス本文: %s\n", auth2Response)
+	c.logger.Debug("auth2レスポンス本文: %s", auth2Response)
 
 	if resp2.StatusCode != 200 {
 		return fmt.Errorf("auth2認証失敗: HTTP %d", resp2.StatusCode)
@@ -190,7 +190,7 @@ func (c *Client) Auth() error {
 	c.authToken = authToken
 
 	c.logger.Info("radiko認証完了")
-	fmt.Printf("=== RADIKO認証デバッグ完了 ===\n\n")
+	c.logger.Debug("=== RADIKO認証デバッグ完了 ===")
 	return nil
 }
 
@@ -210,8 +210,8 @@ func (c *Client) generatePartialKey(keyLengthStr, keyOffsetStr string) (string, 
 		return "", fmt.Errorf("キーオフセットの変換エラー: %w", err)
 	}
 
-	fmt.Printf("共通鍵: %s\n", authKey)
-	fmt.Printf("抽出範囲: オフセット=%d, 長さ=%d\n", keyOffset, keyLength)
+	c.logger.Debug("共通鍵: %s", authKey)
+	c.logger.Debug("抽出範囲: オフセット=%d, 長さ=%d", keyOffset, keyLength)
 
 	// オフセットと長さが有効な範囲内かチェック
 	if keyOffset < 0 || keyLength <= 0 || keyOffset+keyLength > len(authKey) {
@@ -220,12 +220,12 @@ func (c *Client) generatePartialKey(keyLengthStr, keyOffsetStr string) (string, 
 
 	// 部分鍵を抽出
 	partialKeyBytes := authKey[keyOffset : keyOffset+keyLength]
-	fmt.Printf("抽出された部分鍵（hex）: %s\n", partialKeyBytes)
+	c.logger.Debug("抽出された部分鍵（hex）: %s", partialKeyBytes)
 
 	// Base64エンコード
 	partialKey := base64.StdEncoding.EncodeToString([]byte(partialKeyBytes))
 
-	fmt.Printf("Base64エンコード後: %s\n", partialKey)
+	c.logger.Debug("Base64エンコード後: %s", partialKey)
 
 	return partialKey, nil
 }
@@ -261,22 +261,22 @@ func (c *Client) RecordTimeFree(stationID string, startTime time.Time, duration 
 // getTimeFreeURL はタイムフリー再生用のプレイリストURLを取得
 func (c *Client) getTimeFreeURL(stationID string, startTime, endTime time.Time) (string, error) {
 	c.logger.Debug("ストリーミングURL取得を開始: 局=%s", stationID)
-	fmt.Printf("=== ストリーミングURL取得デバッグ開始 ===\n")
-	fmt.Printf("局ID: %s\n", stationID)
+	c.logger.Debug("=== ストリーミングURL取得デバッグ開始 ===")
+	c.logger.Debug("局ID: %s", stationID)
 	if !startTime.IsZero() {
-		fmt.Printf("開始: %s\n", startTime.Format("2006-01-02 15:04:05"))
+		c.logger.Debug("開始: %s", startTime.Format("2006-01-02 15:04:05"))
 	}
 	if !endTime.IsZero() {
-		fmt.Printf("終了: %s\n", endTime.Format("2006-01-02 15:04:05"))
+		c.logger.Debug("終了: %s", endTime.Format("2006-01-02 15:04:05"))
 	}
 
 	// 認証が必要
 	if c.authToken == "" {
-		fmt.Printf("認証トークンが設定されていません\n")
+		c.logger.Error("認証トークンが設定されていません")
 		return "", fmt.Errorf("認証が必要です。先にAuth()を実行してください")
 	}
 
-	fmt.Printf("使用する認証トークン: %s... (長さ: %d)\n", c.authToken[:10], len(c.authToken))
+	c.logger.Debug("使用する認証トークン: %s... (長さ: %d)", c.authToken[:10], len(c.authToken))
 
 	// タイムフリー用のプレイリストURLを構築
 	streamInfoURL := fmt.Sprintf("https://radiko.jp/v2/api/ts/playlist.m3u8?station_id=%s", stationID)
@@ -287,11 +287,11 @@ func (c *Client) getTimeFreeURL(stationID string, startTime, endTime time.Time) 
 		streamInfoURL += "&to=" + endTime.Format("20060102150405")
 	}
 
-	fmt.Printf("ストリーミング情報URL: %s\n", streamInfoURL)
+	c.logger.Debug("ストリーミング情報URL: %s", streamInfoURL)
 
 	req, err := http.NewRequest("GET", streamInfoURL, nil)
 	if err != nil {
-		fmt.Printf("リクエスト作成エラー: %v\n", err)
+		c.logger.Error("リクエスト作成エラー: %v", err)
 		return "", fmt.Errorf("ストリーミング情報リクエスト作成エラー: %w", err)
 	}
 
@@ -302,34 +302,33 @@ func (c *Client) getTimeFreeURL(stationID string, startTime, endTime time.Time) 
 	req.Header.Set("pragma", "no-cache")
 	req.Header.Set("Cache-Control", "no-cache")
 
-	fmt.Printf("送信ヘッダー:\n")
+	c.logger.Debug("送信ヘッダー:")
 	for key, values := range req.Header {
 		for _, value := range values {
 			if key == "X-Radiko-AuthToken" {
-				fmt.Printf("  %s: %s... (長さ: %d)\n", key, value[:10], len(value))
+				c.logger.Debug("  %s: %s... (長さ: %d)", key, value[:10], len(value))
 			} else {
-				fmt.Printf("  %s: %s\n", key, value)
+				c.logger.Debug("  %s: %s", key, value)
 			}
 		}
 	}
 
 	c.logger.Debug("ストリーミング情報リクエスト送信中: %s", streamInfoURL)
-	fmt.Printf("ストリーミング情報リクエスト送信中...\n")
+	c.logger.Debug("ストリーミング情報リクエスト送信中...")
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		fmt.Printf("リクエストエラー: %v\n", err)
+		c.logger.Error("リクエストエラー: %v", err)
 		return "", fmt.Errorf("ストリーミング情報リクエストエラー: %w", err)
 	}
 	defer resp.Body.Close()
 
 	c.logger.Debug("ストリーミングレスポンス: HTTP %d", resp.StatusCode)
-	fmt.Printf("ストリーミングレスポンス: HTTP %d\n", resp.StatusCode)
 
 	// レスポンスヘッダーをデバッグ表示
-	fmt.Printf("レスポンスヘッダー:\n")
+	c.logger.Debug("レスポンスヘッダー:")
 	for key, values := range resp.Header {
 		for _, value := range values {
-			fmt.Printf("  %s: %s\n", key, value)
+			c.logger.Debug("  %s: %s", key, value)
 		}
 	}
 
@@ -338,7 +337,6 @@ func (c *Client) getTimeFreeURL(stationID string, startTime, endTime time.Time) 
 		var buf bytes.Buffer
 		buf.ReadFrom(resp.Body)
 		c.logger.Debug("ストリーミングエラーレスポンス: %s", buf.String())
-		fmt.Printf("ストリーミングエラーレスポンス: %s\n", buf.String())
 		return "", fmt.Errorf("ストリーミング情報取得失敗: HTTP %d", resp.StatusCode)
 	}
 
@@ -346,13 +344,12 @@ func (c *Client) getTimeFreeURL(stationID string, startTime, endTime time.Time) 
 	var buf bytes.Buffer
 	_, err = buf.ReadFrom(resp.Body)
 	if err != nil {
-		fmt.Printf("レスポンス読み取りエラー: %v\n", err)
+		c.logger.Error("レスポンス読み取りエラー: %v", err)
 		return "", fmt.Errorf("ストリーミング情報読み取りエラー: %w", err)
 	}
 
 	playlistContent := buf.String()
 	c.logger.Debug("プレイリスト取得完了、内容長: %d bytes", len(playlistContent))
-	fmt.Printf("プレイリスト取得完了、内容長: %d bytes\n", len(playlistContent))
 
 	// プレイリスト内容の表示用に安全な長さを計算
 	displayLength := len(playlistContent)
@@ -360,29 +357,28 @@ func (c *Client) getTimeFreeURL(stationID string, startTime, endTime time.Time) 
 		displayLength = 200
 	}
 	c.logger.Debug("プレイリスト内容: %s", playlistContent[:displayLength]+"...")
-	fmt.Printf("プレイリスト内容（最初の200文字）:\n%s\n", playlistContent[:displayLength])
+	c.logger.Debug("プレイリスト内容（最初の200文字）:\n%s", playlistContent[:displayLength])
 	if len(playlistContent) > 200 {
-		fmt.Printf("... (省略)\n")
+		c.logger.Debug("... (省略)")
 	}
 
 	// プレイリストから実際のストリーミングURLを抽出
 	lines := strings.Split(playlistContent, "\n")
-	fmt.Printf("プレイリスト解析中...\n")
+	c.logger.Debug("プレイリスト解析中...")
 	for i, line := range lines {
 		line = strings.TrimSpace(line)
-		fmt.Printf("行 %d: %s\n", i+1, line)
+		c.logger.Debug("行 %d: %s", i+1, line)
 		if strings.HasPrefix(line, "https://") && strings.Contains(line, ".m3u8") {
-			c.logger.Debug("ストリーミングURL見つかりました: %s", line)
-			fmt.Printf("ストリーミングURL発見: %s\n", line)
-			fmt.Printf("=== ストリーミングURL取得デバッグ完了 ===\n\n")
+			c.logger.Debug("ストリーミングURL発見: %s", line)
+			c.logger.Debug("=== ストリーミングURL取得デバッグ完了 ===")
 			return line, nil
 		}
 	}
 
 	// プレイリストに直接URLが含まれていない場合、元のURLを返す
 	c.logger.Debug("直接プレイリストURLを使用: %s", streamInfoURL)
-	fmt.Printf("直接URLが見つからないため、プレイリストURLを使用: %s\n", streamInfoURL)
-	fmt.Printf("=== ストリーミングURL取得デバッグ完了 ===\n\n")
+	c.logger.Debug("直接URLが見つからないため、プレイリストURLを使用: %s", streamInfoURL)
+	c.logger.Debug("=== ストリーミングURL取得デバッグ完了 ===")
 	return streamInfoURL, nil
 }
 

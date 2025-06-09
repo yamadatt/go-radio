@@ -38,25 +38,25 @@ func main() {
 		if err := config.SaveConfig(""); err != nil {
 			logger.Fatal("設定ファイル生成に失敗: %v", err)
 		}
-		fmt.Println("設定ファイルを生成しました: ~/.go-radio/config.json")
+		logger.Info("設定ファイルを生成しました: ~/.go-radio/config.json")
 		return
 	}
 
 	if *listFlag {
 		stations := radiko.GetAvailableStations()
-		fmt.Println("利用可能なラジオ局:")
+		logger.Info("利用可能なラジオ局:")
 		for id, name := range stations {
-			fmt.Printf("  %s: %s\n", id, name)
+			logger.Info("  %s: %s", id, name)
 		}
 		return
 	}
 
 	if *stationID == "" || *startTime == "" {
-		fmt.Println("使用方法:")
-		fmt.Println("  go run main.go -station=TBS -start=\"2024-06-07 20:00\" -duration=60 -output=program.aac")
-		fmt.Println("  go run main.go -list  # 利用可能な局の一覧")
-		fmt.Println("  go run main.go -config  # 設定ファイル生成")
-		fmt.Println("  go run main.go -verbose  # 詳細ログを表示")
+		logger.Info("使用方法:")
+		logger.Info("  go run main.go -station=TBS -start=\"2024-06-07 20:00\" -duration=60 -output=program.aac")
+		logger.Info("  go run main.go -list  # 利用可能な局の一覧")
+		logger.Info("  go run main.go -config  # 設定ファイル生成")
+		logger.Info("  go run main.go -verbose  # 詳細ログを表示")
 		os.Exit(1)
 	}
 
@@ -111,11 +111,11 @@ func main() {
 		logger.Debug("出力ディレクトリを作成: %s", outputDir)
 	}
 
-	fmt.Printf("録音設定:\n")
-	fmt.Printf("  局: %s\n", *stationID)
-	fmt.Printf("  開始時間: %s\n", startDateTime.Format("2006-01-02 15:04"))
-	fmt.Printf("  録音時間: %s\n", radiko.FormatDuration(*duration))
-	fmt.Printf("  出力ファイル: %s\n", outputFile)
+	logger.Info("録音設定:")
+	logger.Info("  局: %s", *stationID)
+	logger.Info("  開始時間: %s", startDateTime.Format("2006-01-02 15:04"))
+	logger.Info("  録音時間: %s", radiko.FormatDuration(*duration))
+	logger.Info("  出力ファイル: %s", outputFile)
 
 	// Radikoクライアントを作成
 	client := radiko.NewClient()
@@ -134,5 +134,5 @@ func main() {
 		logger.Fatal("録音に失敗: %v", err)
 	}
 
-	fmt.Printf("録音完了: %s\n", outputFile)
+	logger.Info("録音完了: %s", outputFile)
 }
