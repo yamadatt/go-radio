@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 
@@ -49,21 +48,10 @@ func Handler(ctx context.Context, e Event) (string, error) {
 
 	logger := radiko.NewLogger(verbose)
 
-	config, err := radiko.LoadConfig("")
+	// 設定を読み込み（環境変数も反映）
+	config, err := radiko.LoadConfigWithEnv()
 	if err != nil {
 		logger.Error("設定読み込み警告: %v", err)
-		config = radiko.DefaultConfig()
-	}
-
-	// 環境変数からデフォルト値を取得
-	if defaultDuration := os.Getenv("DEFAULT_DURATION"); defaultDuration != "" {
-		if dur, err := strconv.Atoi(defaultDuration); err == nil {
-			config.DefaultDuration = dur
-		}
-	}
-
-	if defaultOutputDir := os.Getenv("DEFAULT_OUTPUT_DIR"); defaultOutputDir != "" {
-		config.DefaultOutputDir = defaultOutputDir
 	}
 
 	// イベントから設定をオーバーライド
@@ -118,24 +106,10 @@ func Handler(ctx context.Context, e Event) (string, error) {
 		return "", err
 	}
 
-	outputFile := e.Output
-	if outputFile == "" {
-		outputFile = fmt.Sprintf("%s_%s.aac", stationID, startTime.Format("20060102_1504"))
-	} else if outputFile == "yyyymmdd_hhmm.aac" {
-		outputFile = fmt.Sprintf("%s.aac", startTime.Format("20060102_1504"))
-	}
-	if !filepath.IsAbs(outputFile) && config.DefaultOutputDir != "" {
-		outputFile = filepath.Join(config.DefaultOutputDir, outputFile)
-	}
-	if !strings.HasSuffix(outputFile, ".aac") {
-		outputFile += ".aac"
-	}
-
-	outputDir := filepath.Dir(outputFile)
-	if outputDir != "." {
-		if err := os.MkdirAll(outputDir, 0755); err != nil {
-			return "", fmt.Errorf("出力ディレクトリの作成に失敗: %w", err)
-		}
+	// 出力ファイルパスを決定
+	outputFile, err := radiko.BuildOutputPath(config, stationID, e.Output, startTime)
+	if err != nil {
+		return "", fmt.Errorf("出力パス生成に失敗: %w", err)
 	}
 
 	client := radiko.NewClient()

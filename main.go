@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -26,11 +25,10 @@ func main() {
 	// ロガーを初期化
 	logger := radiko.NewLogger(*verbose)
 
-	// 設定を読み込み
-	config, err := radiko.LoadConfig("")
+	// 設定を読み込み（環境変数も反映）
+	config, err := radiko.LoadConfigWithEnv()
 	if err != nil {
 		logger.Error("設定読み込み警告: %v", err)
-		config = radiko.DefaultConfig()
 	}
 	logger.Debug("設定を読み込みました: %+v", config)
 
@@ -84,31 +82,10 @@ func main() {
 		logger.Fatal("時間の妥当性チェックエラー: %v", err)
 	}
 
-	// 出力ファイル名の生成
-	outputFile := *output
-	if outputFile == "" {
-		outputFile = fmt.Sprintf("%s_%s.aac",
-			*stationID,
-			startDateTime.Format("20060102_1504"))
-
-		// 設定で指定された出力ディレクトリを使用
-		if config.DefaultOutputDir != "" {
-			outputFile = filepath.Join(config.DefaultOutputDir, outputFile)
-		}
-	}
-
-	// .aac拡張子を確認
-	if !strings.HasSuffix(outputFile, ".aac") {
-		outputFile += ".aac"
-	}
-
-	// 出力ディレクトリを作成
-	outputDir := filepath.Dir(outputFile)
-	if outputDir != "." {
-		if err := os.MkdirAll(outputDir, 0755); err != nil {
-			logger.Fatal("出力ディレクトリの作成に失敗: %v", err)
-		}
-		logger.Debug("出力ディレクトリを作成: %s", outputDir)
+	// 出力ファイルパスを決定
+	outputFile, err := radiko.BuildOutputPath(config, *stationID, *output, startDateTime)
+	if err != nil {
+		logger.Fatal("出力パス生成に失敗: %v", err)
 	}
 
 	fmt.Printf("録音設定:\n")
