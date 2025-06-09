@@ -1,0 +1,15 @@
+{
+  "station": "TBS",
+  "start": "2024-01-01 20:00",
+  "duration": 60,
+  "output": "test.aac",
+  "verbose": false,
+  "config": {
+    "default_output_dir": "/tmp/test",
+    "default_duration": 60,
+    "station_aliases": {
+      "tbsradio": "TBS"
+    },
+    "ffmpeg_path": "/usr/local/bin/ffmpeg"
+  }
+}
