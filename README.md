@@ -2,7 +2,12 @@
 
 Golangで作成されたradikoのタイムフリー番組を音声ファイル（AAC形式）として保存するツールです。CLIアプリケーションとしてもAWS Lambda 関数としても利用できます。
 
+オンプレ（自宅）で録音するのではなく、クラウドで録音しようと思って作った。
+
+Lambdaで動かすことで、安価に運用できることを期待している。
+
 ## 機能
+
 - radikoのタイムフリー番組を録音
 - 指定した時間での録音
 - AAC形式での音声ファイル出力
@@ -183,22 +188,26 @@ go build -o go-radio main.go
 
 このソフトウェアは個人的な学習目的で作成されています。radikoの利用規約を遵守してご利用ください。
 
-## テスト
+## テスト（参考）
 
-基本的なJSONイベント
+基本的なJSONイベント。マネコンのLambdaテストで以下のパラメータを設定する。
 
+```json
 {
   "station": "TBS",
   "start": "2025-06-08 20:00",
   "duration": 60,
   "output": "program.aac"
 }
+```
 
 `test-lambda.json` として同じ内容のサンプルイベントをリポジトリに含めています。
 
-AWS CLI / SDK での実行
+AWS CLI / SDK での実行。
 
+```bash
 aws lambda invoke \
   --function-name RadioFunction \
   --payload '{"station":"TBS","start":"2025-06-08 20:00","duration":60}' \
   response.json
+```
