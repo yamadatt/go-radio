@@ -70,8 +70,12 @@ func main() {
 		logger.Debug("デフォルト録音時間を使用: %d分", *duration)
 	}
 
-	// 開始時間をパース
-	startDateTime, err := time.Parse("2006-01-02 15:04", *startTime)
+	// 開始時間をパース（常に日本時間として解釈）
+	jst, tzErr := time.LoadLocation("Asia/Tokyo")
+	if tzErr != nil {
+		jst = time.FixedZone("JST", 9*60*60)
+	}
+	startDateTime, err := time.ParseInLocation("2006-01-02 15:04", *startTime, jst)
 	if err != nil {
 		logger.Fatal("時間の形式が正しくありません: %v", err)
 	}
