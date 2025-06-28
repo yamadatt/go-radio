@@ -3,6 +3,7 @@ package radiko
 import (
 	"fmt"
 	"log"
+	"os/exec"
 	"time"
 )
 
@@ -67,4 +68,13 @@ func FormatDuration(minutes int) string {
 		return fmt.Sprintf("%d時間", hours)
 	}
 	return fmt.Sprintf("%d時間%d分", hours, mins)
+}
+
+// ConvertToMP3 uses ffmpeg to convert an AAC file to MP3 format.
+func ConvertToMP3(ffmpegPath, input, output string) error {
+	if ffmpegPath == "" {
+		ffmpegPath = "ffmpeg"
+	}
+	cmd := exec.Command(ffmpegPath, "-y", "-i", input, output)
+	return cmd.Run()
 }

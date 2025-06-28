@@ -29,7 +29,7 @@ Resources:
                 "station": "TBS",
                 "start": "",
                 "duration": 120,
-                "output": "yyyymmdd_hhmm.aac"
+                "output": "yyyymmdd_hhmm.mp3"
               }
             State: ENABLED
             Name: radio-schedule-event

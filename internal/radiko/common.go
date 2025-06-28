@@ -41,17 +41,17 @@ func LoadConfigWithEnv() (*Config, error) {
 func BuildOutputPath(cfg *Config, stationID, output string, start time.Time) (string, error) {
 	file := output
 	if file == "" {
-		file = fmt.Sprintf("%s_%s.aac", stationID, start.Format("20060102_1504"))
-	} else if file == "yyyymmdd_hhmm.aac" {
-		file = fmt.Sprintf("%s.aac", start.Format("20060102_1504"))
+		file = fmt.Sprintf("%s_%s.mp3", stationID, start.Format("20060102_1504"))
+	} else if file == "yyyymmdd_hhmm.mp3" {
+		file = fmt.Sprintf("%s.mp3", start.Format("20060102_1504"))
 	}
 
 	if !filepath.IsAbs(file) && cfg.DefaultOutputDir != "" {
 		file = filepath.Join(cfg.DefaultOutputDir, file)
 	}
 
-	if !strings.HasSuffix(file, ".aac") {
-		file += ".aac"
+	if !strings.HasSuffix(file, ".mp3") {
+		file += ".mp3"
 	}
 
 	dir := filepath.Dir(file)
