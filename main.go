@@ -14,7 +14,7 @@ func main() {
 		stationID  = flag.String("station", "", "ラジオ局ID (例: TBS, LFR)")
 		startTime  = flag.String("start", "", "開始時間 (YYYY-MM-DD HH:MM 形式)")
 		duration   = flag.Int("duration", 0, "録音時間（分）")
-		output     = flag.String("output", "", "出力ファイル名 (.aac拡張子)")
+		output     = flag.String("output", "", "出力ファイル名 (.mp3拡張子)")
 		listFlag   = flag.Bool("list", false, "利用可能な局の一覧を表示")
 		configFlag = flag.Bool("config", false, "設定ファイルを生成")
 		verbose    = flag.Bool("verbose", false, "詳細なログを表示")
@@ -50,7 +50,7 @@ func main() {
 
 	if *stationID == "" || *startTime == "" {
 		logger.Info("使用方法:")
-		logger.Info("  go run main.go -station=TBS -start=\"2024-06-07 20:00\" -duration=60 -output=program.aac")
+		logger.Info("  go run main.go -station=TBS -start=\"2024-06-07 20:00\" -duration=60 -output=program.mp3")
 		logger.Info("  go run main.go -list  # 利用可能な局の一覧")
 		logger.Info("  go run main.go -config  # 設定ファイル生成")
 		logger.Info("  go run main.go -verbose  # 詳細ログを表示")
@@ -110,8 +110,18 @@ func main() {
 
 	// ライブストリーム録音
 	logger.Info("ライブストリーム録音を開始...")
-	if err := client.RecordTimeFree(*stationID, startDateTime, *duration, outputFile); err != nil {
+	recFile := outputFile
+	if strings.HasSuffix(outputFile, ".mp3") {
+		recFile = strings.TrimSuffix(outputFile, ".mp3") + ".aac"
+	}
+	if err := client.RecordTimeFree(*stationID, startDateTime, *duration, recFile); err != nil {
 		logger.Fatal("録音に失敗: %v", err)
+	}
+	if recFile != outputFile {
+		if err := radiko.ConvertToMP3(config.FFmpegPath, recFile, outputFile); err != nil {
+			logger.Fatal("変換に失敗: %v", err)
+		}
+		os.Remove(recFile)
 	}
 
 	logger.Info("録音完了: %s", outputFile)

@@ -119,8 +119,20 @@ func Handler(ctx context.Context, e Event) (string, error) {
 		return "", fmt.Errorf("クライアント初期化に失敗: %w", err)
 	}
 
-	if err := client.RecordTimeFree(stationID, startTime, duration, outputFile); err != nil {
+	recFile := outputFile
+	if strings.HasSuffix(outputFile, ".mp3") {
+		recFile = strings.TrimSuffix(outputFile, ".mp3") + ".aac"
+	}
+
+	if err := client.RecordTimeFree(stationID, startTime, duration, recFile); err != nil {
 		return "", fmt.Errorf("録音に失敗: %w", err)
+	}
+
+	if recFile != outputFile {
+		if err := radiko.ConvertToMP3(config.FFmpegPath, recFile, outputFile); err != nil {
+			return "", fmt.Errorf("変換に失敗: %w", err)
+		}
+		os.Remove(recFile)
 	}
 
 	// Upload to S3 if bucket is specified
@@ -152,7 +164,7 @@ func uploadFileToS3(ctx context.Context, bucket, key, path string) error {
 		Bucket:      aws.String(bucket),
 		Key:         aws.String(key),
 		Body:        f,
-		ContentType: aws.String("audio/aac"),
+		ContentType: aws.String("audio/mpeg"),
 	})
 	return err
 }

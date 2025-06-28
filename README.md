@@ -1,6 +1,6 @@
 # Go-Radio - Radikoタイムフリー録音ツール
 
-Golangで作成されたradikoのタイムフリー番組を音声ファイル（AAC形式）として保存するツールです。CLIアプリケーションとしてもAWS Lambda 関数としても利用できます。
+Golangで作成されたradikoのタイムフリー番組を音声ファイル（MP3形式）として保存するツールです。CLIアプリケーションとしてもAWS Lambda 関数としても利用できます。
 
 オンプレ（自宅）で録音するのではなく、クラウドで録音しようと思って作った。
 
@@ -12,7 +12,7 @@ Lambdaで動かすことで、安価に運用できることを期待してい�
 
 - radikoのタイムフリー番組を録音
 - 指定した時間での録音
-- AAC形式での音声ファイル出力
+- MP3形式での音声ファイル出力
 - 利用可能なラジオ局の一覧表示
 
 ## 必要な環境
@@ -72,7 +72,7 @@ go run main.go -config
 ### 基本的な使用方法
 
 ```bash
-go run main.go -station=TBS -start="2024-06-07 20:00" -duration=60 -output=program.aac
+go run main.go -station=TBS -start="2024-06-07 20:00" -duration=60 -output=program.mp3
 ```
 
 ### パラメータ
@@ -100,7 +100,7 @@ go run main.go -station=TBS -start="2024-06-07 20:00" -duration=60
 
 #### ニッポン放送の番組を30分録音（出力ファイル名指定）
 ```bash
-go run main.go -station=LFR -start="2024-06-07 21:00" -duration=30 -output=nippon_program.aac
+go run main.go -station=LFR -start="2024-06-07 21:00" -duration=30 -output=nippon_program.mp3
 ```
 
 #### J-WAVEの番組を2時間録音
@@ -155,7 +155,7 @@ go build -o go-radio main.go
   "station": "TBS",
   "start": "2024-06-07 20:00",
   "duration": 60,
-  "output": "program.aac"
+  "output": "program.mp3"
 }
 ```
 
@@ -182,7 +182,7 @@ go build -o go-radio main.go
 ### 番組が見つからない場合
 - 指定した時間に番組が放送されていたか確認してください
 - タイムフリーの利用可能期間（過去1週間）内かどうか確認してください
-- `録音に失敗: open *.aac: read-only file system` というエラーが出る場合は、
+- `録音に失敗: open *.mp3: read-only file system` というエラーが出る場合は、
   `/tmp` 以下に書き込むよう `output` を設定するか、`DEFAULT_OUTPUT_DIR`
   を `/tmp` 以下に指定してください
 
@@ -199,7 +199,7 @@ go build -o go-radio main.go
   "station": "TBS",
   "start": "2025-06-08 20:00",
   "duration": 60,
-  "output": "program.aac"
+  "output": "program.mp3"
 }
 ```
 
